@@ -39,10 +39,15 @@ def index():
 @app.route("/register", methods=["POST"])
 def register():
     try:
-        email = request.form["email"]
-        password = request.form["password"]
-        lang = request.form["lang"]
-        description = request.form["description"]
+        if request.is_json:
+            content = request.get_json()
+        else:
+            content = request.form
+        
+        email = content["email"]
+        password = content["password"]
+        lang = content["lang"]
+        description = content["description"]
 
     except Exception as e:
         log.error(e)
@@ -77,8 +82,13 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     try:
-        email = request.form["email"]
-        password = request.form["password"]
+        if request.is_json:
+            content = request.get_json()
+        else:
+            content = request.form
+        
+        email = content["email"]
+        password = content["password"]
 
     except Exception as e:
         log.error(e)
