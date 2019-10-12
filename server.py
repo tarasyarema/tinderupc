@@ -56,9 +56,11 @@ def register():
          return {"message": "Bad form"}, 400
 
       print(email, password)
-      
-      return {"message": "user registered and logged in"}, 200
-   
+      session["session_id"] = True
+      user1, user2 = choices(db.users.find(), k=2)
+      return render_template('index.html',
+                                    user1=user1,
+                                    user2=user2) 
    else:
       return {"message": "wtf"}, 400
 
