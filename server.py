@@ -18,7 +18,9 @@ app = Flask(__name__, template_folder="templates")
 
 @app.route("/", methods=["GET"])
 def index():
-   return render_template("index.html")
+    if not session["logged_in"]:
+        return redirect('/login')
+    return render_template("index.html")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -32,7 +34,7 @@ def register():
       
       except Exception as e:
          log.error(e)
-         return {"message": "Bad from"}, 400
+         return {"message": "Bad form"}, 400
 
       print(email, password)
       
