@@ -1,104 +1,100 @@
 import os
 import logging
+import jwt
 
 from random import choices
 
 from datetime import datetime
 from dotenv import load_dotenv
 
-from flask import Flask, request, session, redirect, render_template
+from flask import Flask, request, session, redirect
 
 from pymongo import MongoClient
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 
-from elo import update_elo 
+from elo import update_elo
 
 load_dotenv()
 log = logging.getLogger(__name__)
 
-# PyMongo config
-client = MongoClient('localhost', 27017)
-db = client['tinder']
+SECRET = os.environ["SECRET"]
+CLIENT = MongoClient(
+    os.environ["MONGO_HOST"],
+    int(os.environ["MONGO_PORT"]))
+db = CLIENT["tinder"]
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__)
 
-@app.route("/", methods=["GET","POST"])
+
+def error(message="Bad request", code=400):
+    return {"message": message}, code
+
+
+@app.route("/", methods=["GET"])
 def index():
-    if request.method == 'GET':
-        if "logged_in" not in session.keys():
-            return redirect('/login')
+    return {"message": "GTFO"}
 
-        if session["logged_in"] is False:
-            return redirect('/login')
 
-        user1, user2 = choices(db.users.find(), k=2)
-        return render_template("index.html",
-                                        user1=user1,
-                                        user2=user2)
-    if request.method == 'POST':
-        relations = session["session_id"]['relations']  
-        update_elo(request.data.user1.id, request.data.user2.id,relations, win) 
-        redirect('/')
-
-@app.route("/register", methods=["GET", "POST"])
+@app.route("/register", methods=["POST"])
 def register():
-   if request.method == "GET":
-      return render_template("register.html")
+    try:
+        email = request.form["email"]
+        password = request.form["password"]
+        lang = request.form["lang"]
+        description = request.form["description"]
 
-   elif request.method == "POST":
-      try:
-         email = request.form["email"]
-         password = request.form["password"]
-      
-      except Exception as e:
-         log.error(e)
-         return {"message": "Bad form"}, 400
+    except Exception as e:
+        log.error(e)
+        return error("Bad form data")
 
-      print(email, password)
-      session["session_id"] = True
-      user1, user2 = choices(db.users.find(), k=2)
-      return render_template('index.html',
-                                    user1=user1,
-                                    user2=user2) 
-   else:
-      return {"message": "wtf"}, 400
+    _target = db.users.find_one({"email": email})
+    
+    if _target is not None:
+        return error(message="User already exists", code=400)
+
+    user = {
+        "email": email,
+        "password": password,
+        "meta": {
+            "lang": lang,
+            "description": description
+        },
+        "relations": {}
+    }
+
+    try:
+        _user = db.users.insert_one(user)
+
+    except Exception as e:
+        log.error(e)
+        return error(message="Could not create user")
+
+    _jwt = jwt.encode({"id": str(_user.inserted_id)}, SECRET, algorithm='HS256').decode()
+    return {"token": _jwt}, 200
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-   if request.method == "GET":
-      return render_template("login.html")
+    try:
+        email = request.form["email"]
+        password = request.form["password"]
 
-   elif request.method == "POST":
-      try:
-         email = request.form["email"]
-         password = request.form["password"]
-      
-      except Exception as e:
-         log.error(e)
-         return {"message": "Bad from"}, 400
+    except Exception as e:
+        log.error(e)
+        return error("Bad form data")
 
-      target = db.find_one({"email": email})
+    _target = db.users.find_one({"email": email})
+    
+    if _target is None:
+        return error(message="User not found", code=404)
 
-      if target is None:
-         return {"message": "user not found"}, 404
+    if _target["password"] != password:
+        return error(message="Wrong credentials")
 
-      if target["password"] == password:
-         session["logged_in"] = True
-         session["session_id"] = db.users.find_one({"email": email})  
+    _jwt = jwt.encode({"id": str(_target["_id"])}, SECRET, algorithm='HS256').decode()
+    return {"token": _jwt}, 200
 
-      else:
-         return {"message": "wrong credentials"}, 400
-
-      return {"message": "user logged in"}, 200
-   
-   else:
-      return {"message": "wtf"}, 400
 
 if __name__ == "__main__":
-   mongo = MongoClient(
-      os.environ["MONGO_HOST"],
-      int(os.environ["MONGO_PORT"])
-   )
-
-   app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
