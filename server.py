@@ -10,17 +10,34 @@ from pymongo import MongoClient
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 
+from utils import update_elo 
+
 load_dotenv()
-db = None
 log = logging.getLogger(__name__)
+
+# PyMongo config
+client = MongoClient('localhost', 27017)
+db = client['tinder-upc']
 
 app = Flask(__name__, template_folder="templates")
 
-@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET","POST"])
 def index():
-    if not session["logged_in"]:
-        return redirect('/login')
-    return render_template("index.html")
+    if request.method == 'GET':
+        if not session["logged_in"]:
+            return redirect('/login')
+        user1 = db.users.aggregate([{$sample: {size:1}}])
+        user2 = db.users.aggregate([{$sample: {size:1}}])
+        while user1 == user2:
+            user2 = db.users.aggregate([{$sample: {size:1}}])
+
+        return render_template("index.html",
+                                        user1=user1,
+                                        user2=user2)
+    if request.method == 'POST':
+        relations = dict()
+        update_elo(request.data.user1.id, request.data.user2.id,relations, win) 
+        redirect('/')
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
