@@ -1,6 +1,8 @@
 import os
 import logging
 
+from random import choices
+
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -10,32 +12,32 @@ from pymongo import MongoClient
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 
-from utils import update_elo 
+from elo import update_elo 
 
 load_dotenv()
 log = logging.getLogger(__name__)
 
 # PyMongo config
 client = MongoClient('localhost', 27017)
-db = client['tinder-upc']
+db = client['tinder']
 
 app = Flask(__name__, template_folder="templates")
 
 @app.route("/", methods=["GET","POST"])
 def index():
     if request.method == 'GET':
-        if not session["logged_in"]:
+        if "logged_in" not in session.keys():
             return redirect('/login')
-        user1 = db.users.aggregate([{$sample: {size:1}}])
-        user2 = db.users.aggregate([{$sample: {size:1}}])
-        while user1 == user2:
-            user2 = db.users.aggregate([{$sample: {size:1}}])
 
+        if session["logged_in"] is False:
+            return redirect('/login')
+
+        user1, user2 = choices(db.users.find(), k=2)
         return render_template("index.html",
                                         user1=user1,
                                         user2=user2)
     if request.method == 'POST':
-        relations = dict()
+        relations = session["session_id"]['relations']  
         update_elo(request.data.user1.id, request.data.user2.id,relations, win) 
         redirect('/')
 
@@ -81,6 +83,7 @@ def login():
 
       if target["password"] == password:
          session["logged_in"] = True
+         session["session_id"] = db.users.find_one({"email": email})  
 
       else:
          return {"message": "wrong credentials"}, 400
@@ -95,7 +98,5 @@ if __name__ == "__main__":
       os.environ["MONGO_HOST"],
       int(os.environ["MONGO_PORT"])
    )
-
-   db = mongo.users
 
    app.run(host="0.0.0.0", port=5000, debug=True)
