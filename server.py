@@ -107,7 +107,17 @@ def ranking():
                         key=lambda x: x["elo"], 
                         reverse=True)
 
-    return {"data": _relations[:5]}, 200
+    for r in _relations:
+        _tmp = db.users.find_one({"_id": ObjectId(r["id"])})
+        if _tmp is None:
+            r["user_data"] = {}
+        else:
+            r["user_data"] = {
+                "email": _tmp["email"],
+                "meta": _tmp["meta"]
+            }
+
+    return dumps({"data": _relations[:5]}), 200
 
 
 @app.route("/register", methods=["POST"])

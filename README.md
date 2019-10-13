@@ -112,24 +112,59 @@ HTTP 200
 {
    "data": [
       {
+         "id": "5da26d9687f808f820d54233",
+         "elo": 1546.0200225109015,
+         "user_data": {
+            "email": "jajaasd",
+            "meta": {
+               "lang": "Python 3.7",
+               "description": "hola  asd k tal"
+            }
+         }
+      },
+      {
+         "id": "5da23afa05650a08e4ca6a8f",
          "elo": 1534.137483083232,
-         "id": "5da23afa05650a08e4ca6a8f"
+         "user_data": {
+            "email": "2pac",
+            "meta": {
+               "lang": "OCaml",
+               "description": "jeje"
+            }
+         }
       },
       {
-         "elo": 1532.8705963547923,
-         "id": "5da26d9687f808f820d54233"
+         "id": "5da25e5286dc7e9c3be99a0d",
+         "elo": 1516.983271764316,
+         "user_data": {
+            "email": "taras",
+            "meta": {
+               "lang": "C",
+               "desccription": "asdasd asdas"
+            }
+         }
       },
       {
-         "elo": 1528.0781000835332,
-         "id": "5da25e5286dc7e9c3be99a0d"
-      },
-      {
+         "id": "5da25857e57c8c0839a12bea",
          "elo": 1465.0496502835474,
-         "id": "5da25857e57c8c0839a12bea"
+         "user_data": {
+            "email": "asd",
+            "meta": {
+               "lang": "R",
+               "description": "juju"
+            }
+         }
       },
       {
+         "id": "5da25e8e5dd47b259e2ac2e3",
          "elo": 1434.9030321116102,
-         "id": "5da25e8e5dd47b259e2ac2e3"
+         "user_data": {
+            "email": "taras",
+            "meta": {
+               "lang": "C",
+               "desccription": "asdasd asdas"
+            }
+         }
       }
    ]
 }
