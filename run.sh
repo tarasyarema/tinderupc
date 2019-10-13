@@ -1,1 +1,1 @@
-sudo docker run --rm --name tinderupc -v ~/tinderupc:/app tinderupc --env-file .env tinderupc
+sudo docker run --rm --name tinderupc -v ~/tinderupc:/app tinderupc --env-file .env tinderupc-p 80:5000
