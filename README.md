@@ -169,4 +169,13 @@ HTTP 200
    ]
 }
 ```
-
+# Run
+Execute `startDB.sh`, `build.sh` and `run.sh`.
+You will need a `.env` file with the following envars:
+```
+SECRET=
+MONGO_HOST=
+MONGO_PORT=
+MONGO_INITDB_ROOT_USERNAME=
+MONGO_INITDB_ROOT_PASSWORD=
+```
