@@ -51,7 +51,64 @@ def index():
 
 @app.route("/vote", methods=["POST"])
 def vote():
-    return {}, 200
+    try:
+        content = request.get_json()
+        id_a = content["id_a"]
+        id_b = content["id_b"]
+        win = content["win"]
+
+    except Exception as e:
+        log.error(e)
+        return error("Wrong data", 400)
+
+    header = request.headers.get("Authorization")
+    
+    if header:
+        token = header.split(" ")[1]
+    else:
+        return error("No authorization", 401)
+
+    _user_id = jwt.decode(token, SECRET, algorithms=['HS256'])
+    _user = db.users.find_one({"_id": ObjectId(_user_id["id"])})  
+    
+    if _user is None:
+        return error("User not found", 404)
+
+    _updated = db.users.update_one(
+        {"_id": _user["_id"]},
+        update_elo(id_a, id_b, _user["relations"], win))
+
+    log.info(_updated)
+
+    return {"message": "user relations updated"}, 200
+
+
+@app.route("/ranking", methods=["GET"])
+def ranking():
+    header = request.headers.get("Authorization")
+    
+    if header:
+        token = header.split(" ")[1]
+    else:
+        return error("No authorization", 401)
+
+    _user_id = jwt.decode(token, SECRET, algorithms=['HS256'])
+    _user = db.users.find_one({"_id": ObjectId(_user_id["id"])})  
+
+    if _user is None:
+        return error("User not found", 404)
+
+    _relations_list = [
+        {"id": k, "elo": v["elo"]} 
+        for k, v in _user["relations"].items()
+        ]
+
+    _relations = sorted(_relations_list, 
+                        key=lambda x: x["elo"], 
+                        reverse=True)
+
+    return {"data": _relations[:5]}, 200
+
 
 @app.route("/register", methods=["POST"])
 def register():
