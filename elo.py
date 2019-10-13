@@ -1,5 +1,6 @@
+from bson.objectid import ObjectId
+
 R0 = 1500
-K0 = 40
 K = 20
 
 def K_inter(_c):
