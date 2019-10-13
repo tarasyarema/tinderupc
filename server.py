@@ -114,6 +114,7 @@ def ranking():
         else:
             r["user_data"] = {
                 "email": _tmp["email"],
+                "name": _tmp["name"],
                 "meta": _tmp["meta"]
             }
 
@@ -132,6 +133,7 @@ def register():
         password = content["password"]
         lang = content["lang"]
         description = content["description"]
+        name = content["name"]
 
     except Exception as e:
         log.error(e)
@@ -145,6 +147,7 @@ def register():
     user = {
         "email": email,
         "password": password,
+        "name": name,
         "meta": {
             "lang": lang,
             "description": description
