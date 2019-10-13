@@ -33,8 +33,25 @@ def error(message="Bad request", code=400):
 
 @app.route("/", methods=["GET"])
 def index():
-    return {"message": "GTFO"}
+    header = request.headers.get("Authorization")
+    
+    if header:
+        token = header.split(" ")[1]
+    else:
+        return error("No authorization", 401)
 
+    _user_id = jwt.decode(token, SECRET, algorithms=['HS256'])
+
+    users = list(db.users.find({"_id": {"$ne": ObjectId(_user_id["id"])}}))
+    data = choices(list(users), k=2)
+    data = [{"id": str(u["_id"]), "data": u["meta"]} for u in data]
+
+    return dumps({"data": data})
+
+
+@app.route("/vote", methods=["POST"])
+def vote():
+    return {}, 200
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -79,7 +96,7 @@ def register():
     return {"token": _jwt}, 200
 
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["POST"])
 def login():
     try:
         if request.is_json:
