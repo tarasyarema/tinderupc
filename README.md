@@ -58,7 +58,7 @@ HTTP 200
 }
 ```
 
-### Login: `POST /logout`
+### Logout: `POST /logout`
 #### Request
 You should delete the auth header before calling this.
 
@@ -103,6 +103,8 @@ HTTP 200
 
 ### Vote: `POST /vote`
 #### Request
+The token as a `Authorization: Bearer {token}` header.
+
 Can be called via form data or JSON body.
 The format has to be the following:
 ```json
@@ -198,3 +200,54 @@ HTTP 200
 }
 ```
 
+### Post media for a user: `POST /media`
+#### Request
+The token as a `Authorization: Bearer {token}` header.
+Binary data with optional `Content-Type` header.
+Adds a document to the `media` collection with `user_id` the given user.
+
+Now it adds raw binary data to the db, in the **next pivot** (*v1337.0.0*) this will be changed to a url of the image in some cloud platform (Google Cloud probably).
+
+#### Returns
+Returns JSON
+```json
+HTTP 200
+
+{
+   "message": "media content uploaded"
+}
+```
+
+### Get a user profile: `GET /profile`
+#### Request
+The token as a `Authorization: Bearer {token}` header.
+
+#### Returns
+Returns JSON
+```json
+HTTP 200
+
+{
+   "user": {
+      "id": "5da48689bac312608d6d23fc",
+      "meta": {
+         "description": ":3",
+         "lang": "Python 2.7",
+         "position": "CEO",
+         "age": 22,
+         "orientation": "all",
+         "whatever": "love you bb"
+      }
+   },
+   "media": [
+      {
+         "id": "5da493415a0927043cc640f9",
+         "data": {
+            "$binary": "iVB...rkJggg==",
+            "$type": "00"
+         },
+         "type": "image/png"
+      }
+   ]
+}
+```
