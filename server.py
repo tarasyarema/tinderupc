@@ -197,7 +197,7 @@ def login():
     if _target is None:
         return error(message="User not found", code=404)
 
-    if verify_password(_target["password"], password):
+    if verify_password(_target["password"], password) is False:
         return error(message="Wrong credentials")
 
     _jwt = jwt.encode({"id": str(_target["_id"])}, SECRET, algorithm='HS256').decode()
