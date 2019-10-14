@@ -14,6 +14,7 @@ from bson.json_util import dumps
 from bson.objectid import ObjectId
 
 from elo import update_elo
+from utils import hash_password, verify_password
 
 load_dotenv()
 log = logging.getLogger(__name__)
@@ -140,7 +141,7 @@ def register():
                     400)
 
         email = content["email"]
-        password = content["password"]
+        password = hash_password(content["password"])
 
         # Dynamic shit omfg
         meta = {
@@ -196,7 +197,7 @@ def login():
     if _target is None:
         return error(message="User not found", code=404)
 
-    if _target["password"] != password:
+    if verify_password(_target["password"], password):
         return error(message="Wrong credentials")
 
     _jwt = jwt.encode({"id": str(_target["_id"])}, SECRET, algorithm='HS256').decode()
