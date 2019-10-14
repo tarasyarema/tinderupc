@@ -31,17 +31,28 @@ app = Flask(__name__)
 def error(message="Bad request", code=400):
     return {"message": message}, code
 
-
-@app.route("/", methods=["GET"])
-def index():
+def check_header(request):
     header = request.headers.get("Authorization")
-    
+
     if header:
         token = header.split(" ")[1]
     else:
-        return error("No authorization", 401)
+        return None
+    
+    try:
+        _user_id = jwt.decode(token, SECRET, algorithms=['HS256'])
+    except Exception as e:
+        log.error(e)
+        return None
 
-    _user_id = jwt.decode(token, SECRET, algorithms=['HS256'])
+    return _user_id
+
+@app.route("/", methods=["GET"])
+def index():
+    _user_id = check_header(request)
+
+    if _user_id is None:
+        return error("Token not valid or not given", 400)
 
     users = list(db.users.aggregate([
             {"$match": {"_id": {"$ne": ObjectId(_user_id["id"])}}},
@@ -65,14 +76,11 @@ def vote():
         log.error(e)
         return error("Wrong data", 400)
 
-    header = request.headers.get("Authorization")
-    
-    if header:
-        token = header.split(" ")[1]
-    else:
-        return error("No authorization", 401)
+    _user_id = check_header(request)
 
-    _user_id = jwt.decode(token, SECRET, algorithms=['HS256'])
+    if _user_id is None:
+        return error("Token not valid or not given", 400)
+    
     _user = db.users.find_one({"_id": ObjectId(_user_id["id"])})  
     
     if _user is None:
@@ -89,14 +97,11 @@ def vote():
 
 @app.route("/ranking", methods=["GET"])
 def ranking():
-    header = request.headers.get("Authorization")
-    
-    if header:
-        token = header.split(" ")[1]
-    else:
-        return error("No authorization", 401)
+    _user_id = check_header(request)
 
-    _user_id = jwt.decode(token, SECRET, algorithms=['HS256'])
+    if _user_id is None:
+        return error("Token not valid or not given", 400)
+    
     _user = db.users.find_one({"_id": ObjectId(_user_id["id"])})  
 
     if _user is None:
@@ -176,6 +181,57 @@ def register():
     _jwt = jwt.encode({"id": str(_user.inserted_id)}, SECRET, algorithm='HS256').decode()
     return {"token": _jwt}, 200
 
+@app.route("/profile", methods=["GET"])
+def profile():
+    _user_id = check_header(request)
+
+    _user = db.users.find_one({"_id": ObjectId(_user_id["id"])})
+
+    if _user is None:
+        return error("User not found", 404)
+
+    _media = db.media.find({"user_id": _user["_id"]})
+    _media = _media if _media is not None else []
+
+    data = {
+        "user": {
+            "id": str(_user["_id"]),
+            "meta": _user["meta"]
+        },
+        "media": [
+            {
+                "id": str(m["_id"]),
+                "data": bytes(m["data"]),
+                "type": m["type"]
+            }
+            for m in _media
+        ]
+    }
+
+    return dumps(data), 200
+
+@app.route("/media", methods=["POST"])
+def media():
+    _user_id = check_header(request)
+
+    if _user_id is None:
+        return error("Token not valid or not given", 400)
+
+    data = request.data
+
+    if type(data) is not bytes:
+        return error("Bad data format, should be binary data", 400)
+
+    c_type = request.headers.get("content_type")
+
+    db.media.insert_one({
+        "user_id": ObjectId(_user_id["id"]),
+        "uploaded": datetime.now(),
+        "data": data,
+        "type": c_type if c_type is not None else ""
+        })
+
+    return {"message": "media content uploaded"}, 200
 
 @app.route("/login", methods=["POST"])
 def login():
