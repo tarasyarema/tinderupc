@@ -2,7 +2,7 @@ import os
 import logging
 import jwt
 
-from random import choices
+from random import sample
 
 from datetime import datetime
 from dotenv import load_dotenv
@@ -42,10 +42,13 @@ def index():
 
     _user_id = jwt.decode(token, SECRET, algorithms=['HS256'])
 
-    users = list(db.users.find({"_id": {"$ne": ObjectId(_user_id["id"])}}))
-    data = choices(list(users), k=2)
-    data = [{"id": str(u["_id"]), "data": u["meta"]} for u in data]
-
+    users = list(db.users.aggregate([
+            {"$match": {"_id": {"$ne": ObjectId(_user_id["id"])}}},
+            {"$sample": {"size": 2}}            
+            ])
+        )
+    
+    data = [{"id": str(u["_id"]), "data": u["meta"]} for u in users]
     return dumps({"data": data})
 
 
@@ -128,10 +131,23 @@ def register():
         else:
             content = request.form
         
+        mandatory_fields = ["email", "password"]
+
+        for _f in mandatory_fields:
+            if _f not in content.keys():
+                return error(
+                    "Mandatory fields not given, dumbshit", 
+                    400)
+
         email = content["email"]
         password = content["password"]
-        lang = content["lang"]
-        description = content["description"]
+
+        # Dynamic shit omfg
+        meta = {
+            k: v
+            for k, v in content.items()
+            if k not in mandatory_fields
+        }
 
     except Exception as e:
         log.error(e)
@@ -145,10 +161,7 @@ def register():
     user = {
         "email": email,
         "password": password,
-        "meta": {
-            "lang": lang,
-            "description": description
-        },
+        "meta": meta,
         "relations": {}
     }
 
@@ -189,6 +202,12 @@ def login():
     _jwt = jwt.encode({"id": str(_target["_id"])}, SECRET, algorithm='HS256').decode()
     return {"token": _jwt}, 200
 
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    # Much endpoint
+    # Such query
+    return {"message": "logged out"}, 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80, debug=True)
