@@ -1,17 +1,31 @@
-## Api reference
+# Melice Corp main API engine
+
+## Run
+
+Execute `startDB.sh`, `build.sh` and `run.sh`.
+You will need a `.env` file with the following envars:
+```
+SECRET=
+MONGO_HOST=
+MONGO_PORT=
+MONGO_INITDB_ROOT_USERNAME=
+MONGO_INITDB_ROOT_PASSWORD=
+```
+
+## API reference (Inital pivot version v69.0.0)
 
 ### Register: `POST /register`
 #### Request
 Can be called via form data or JSON body.
-The format has to be the following:
+The mandatory format has to be the following:
 ```json
 {
 	"email": "biene@hackupc.com",
-	"password": "biene",
-	"description": "Hola, m'agrada no dormir!",
-	"lang": "Python 3.7"
+	"password": "biene"
 }
 ```
+After that, you can add all the key, value pairs you want.
+They will be stored in the meta object of the user created.
 
 #### Returns
 A JWT token.
@@ -44,6 +58,19 @@ HTTP 200
 }
 ```
 
+### Login: `POST /logout`
+#### Request
+You should delete the auth header before calling this.
+
+#### Returns
+```json
+HTTP 200
+
+{
+   "message": "logged out"
+}
+```
+
 ### Get stack: `GET /`
 #### Request
 The token as a `Authorization: Bearer {token}` header.
@@ -59,14 +86,15 @@ HTTP 200
          "id": "5da25e5286dc7e9c3be99a0d",
          "data": {
             "lang": "C",
-            "desccription": "I like maths!"
+            "desccription": "I like maths!",
+            "age": 22
          }
       },
       {
          "id": "5da25e5286dc7e9c3be99a0d",
          "data": {
             "lang": "Python",
-            "desccription": "I like to suck :3"
+            "dick": 25
          }
       }
    ]
@@ -169,13 +197,4 @@ HTTP 200
    ]
 }
 ```
-# Run
-Execute `startDB.sh`, `build.sh` and `run.sh`.
-You will need a `.env` file with the following envars:
-```
-SECRET=
-MONGO_HOST=
-MONGO_PORT=
-MONGO_INITDB_ROOT_USERNAME=
-MONGO_INITDB_ROOT_PASSWORD=
-```
+
