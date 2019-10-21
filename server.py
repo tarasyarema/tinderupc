@@ -29,7 +29,7 @@ if "HEROKU" in os.environ and os.environ.get("HEROKU"):
 else:
     # Local development
     CLIENT = MongoClient(os.environ["MONGO_HOST"], int(os.environ["MONGO_PORT"]))
-db = CLIENT["tinder"]
+    db = CLIENT["tinder"]
 
 app = Flask(__name__)
 
