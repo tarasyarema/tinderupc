@@ -21,17 +21,17 @@ log = logging.getLogger(__name__)
 
 SECRET = os.environ["SECRET"]
 
-if "MONGO_URI" in os.environ:
+if "HEROKU" in os.environ and os.environ.get("HEROKU"):
     #Heroku deployment
     CLIENT = MongoClient(os.environ["MONGO_URI"])
+    db = CLIENT[os.environ["MONGO_DB"]]
+
 else:
     # Local development
     CLIENT = MongoClient(os.environ["MONGO_HOST"], int(os.environ["MONGO_PORT"]))
-
 db = CLIENT["tinder"]
 
 app = Flask(__name__)
-
 
 def error(message="Bad request", code=400):
     return {"message": message}, code
