@@ -20,9 +20,14 @@ load_dotenv()
 log = logging.getLogger(__name__)
 
 SECRET = os.environ["SECRET"]
-CLIENT = MongoClient(
-    os.environ["MONGO_HOST"],
-    int(os.environ["MONGO_PORT"]))
+
+if "MONGO_URI" in os.environ:
+    #Heroku deployment
+    CLIENT = MongoClient(os.environ["MONGO_URI"])
+else:
+    # Local development
+    CLIENT = MongoClient(os.environ["MONGO_HOST"], int(os.environ["MONGO_PORT"]))
+
 db = CLIENT["tinder"]
 
 app = Flask(__name__)
