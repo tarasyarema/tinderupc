@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-unknown
+spec:
+  selector:
+    matchLabels:
+      app: backend-unknown
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        build: ""
+        app: backend-unknown
+    spec:
+      containers:
+      - name: backend-unknown
+        image: eu.gcr.io/project/backend-unknown:latest
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80
